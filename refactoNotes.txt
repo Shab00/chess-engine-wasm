@@ -1,0 +1,22 @@
+Refactor or Remove main.c and uci.c:
+
+Take out the UCI/CLI loop (handling stdin, printing responses, etc.)
+Instead, provide functions like:
+C
+
+void engine_set_fen(const char*);
+void engine_make_move(const char*);
+void engine_get_bestmove(char* out_str, int buflen);
+
+OK to leave printfs and logs elsewhere
+
+Internal printf/fprintf(stderr,...) are fine—browser sees them as JS console.log/console.error.
+
+Remove/disable any code that reads console/stdin or expects the user to type anything.
+
+In your header files (uci.h, etc), define the new “engine API” for the browser/JS world.
+
+Everything else (hash, search, eval, position, movegen, etc):
+
+No changes needed unless a function takes/returns user input or FILE*.
+
