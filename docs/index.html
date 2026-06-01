@@ -1,112 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <title>Chess Engine WASM Demo</title>
+  <meta charset="UTF-8" />
+  <title>Chessboard Test</title>
+  <link rel="stylesheet" href="./assets/chessboard.css">
   <style>
-    body { font-family: sans-serif; max-width: 700px; margin: 2em auto;}
-    code, input, textarea { font-family: monospace;}
-    .log { margin-top: 1em; border: 1px solid #999; background: #fafaff; padding: 1em; height: 8em; overflow: auto;}
-    .row { margin-bottom: 1em;}
+    body {
+      font-family: sans-serif;
+      margin: 2em;
+    }
+    #board {
+      width: 400px;
+    }
   </style>
 </head>
 <body>
-  <h1>Chess Engine WASM Demo (Direct JS API)</h1>
+  <h1>Chessboard Test</h1>
+  <div id="board"></div>
 
-  <div class="row">
-    <button onclick="newGame()">New Game</button>
-    <input id="fenInput" type="text" size="80"
-           placeholder="type/paste FEN here, or use 'New Game' to start standard position"/>
-    <button onclick="setFEN()">Set FEN</button>
-  </div>
+  <script type="module">
+    import { Chessboard, FEN, COLOR, INPUT_EVENT_TYPE } from "./src/Chessboard.js";
 
-  <div class="row">
-    <input id="moveInput" type="text" size="10" placeholder="e.g. e2e4"/>
-    <button onclick="makeMove()">Make Move</button>
-    <button onclick="getBestMove()">Get Best Move (engine)</button>
-  </div>
+    const board = new Chessboard(document.getElementById("board"), {
+      position: FEN.start,
+      assetsUrl: "./assets/"
+    });
 
-  <div class="row">
-    <strong>Position FEN:</strong>
-    <input id="posFENOut" type="text" size="80" readonly/>
-  </div>
-
-  <div class="row">
-    <strong>Engine output:</strong>
-    <pre class="log" id="log"></pre>
-  </div>
-
-  <script>
-    // Define Module BEFORE engine.js loads
-    var Module = {
-      onRuntimeInitialized: function() {
-        logMsg("Engine WASM loaded.");
-        updatePosFEN();
+    board.enableMoveInput((event) => {
+      switch (event.type) {
+        case INPUT_EVENT_TYPE.moveInputStarted:
+          return true;
+        case INPUT_EVENT_TYPE.validateMoveInput:
+          return true;
+        case INPUT_EVENT_TYPE.moveInputFinished:
+          console.log("move finished", event.squareFrom, event.squareTo);
+          break;
       }
-    };
+      return true;
+    }, COLOR.white);
 
-    function logMsg(msg) {
-      let log = document.getElementById('log');
-      log.textContent += msg + "\n";
-      log.scrollTop = log.scrollHeight;
-    }
-
-    function newGame() {
-      Module._wasm_engine_new_game();
-      logMsg("New game started (standard position).");
-      updatePosFEN();
-    }
-
-    function setFEN() {
-      let fen = document.getElementById('fenInput').value.trim();
-      let ptr = Module._malloc(fen.length + 1);
-      Module.stringToUTF8(fen, ptr, fen.length + 1);
-      let res = Module._wasm_engine_set_fen(ptr);
-      if(res == 0) {
-        logMsg("Set FEN OK.");
-      } else {
-        logMsg("Failed to set FEN!");
-      }
-      Module._free(ptr);
-      updatePosFEN();
-    }
-
-    function makeMove() {
-      let move = document.getElementById('moveInput').value.trim();
-      let ptr = Module._malloc(move.length + 1);
-      Module.stringToUTF8(move, ptr, move.length + 1);
-      let res = Module._wasm_engine_make_move(ptr);
-      if(res == 0) {
-        logMsg("Made move: " + move);
-      } else {
-        logMsg("Failed to make move: " + move);
-      }
-      Module._free(ptr);
-      updatePosFEN();
-    }
-
-    function getBestMove() {
-      let bufLen = 16;
-      let buf = Module._malloc(bufLen);
-      let res = Module._wasm_engine_get_bestmove(buf, bufLen);
-      if(res == 0) {
-        let move = Module.UTF8ToString(buf);
-        logMsg("Best move: " + move);
-      } else {
-        logMsg("No legal moves found (maybe mate/stalemate).");
-      }
-      Module._free(buf);
-    }
-
-    function updatePosFEN() {
-      let bufLen = 128;
-      let buf = Module._malloc(bufLen);
-      Module._wasm_engine_get_fen(buf, bufLen);
-      let fen = Module.UTF8ToString(buf);
-      document.getElementById("posFENOut").value = fen;
-      Module._free(buf);
-    }
+    console.log("Chessboard initialized", board);
   </script>
-  <script src="engine.js"></script> <!-- Must come AFTER Module definition -->
 </body>
 </html>
