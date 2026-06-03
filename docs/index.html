@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Chessboard Test</title>
+  <title>Chessboard + WASM Load Test</title>
   <link rel="stylesheet" href="./assets/chessboard.css">
   <style>
     body {
@@ -11,12 +11,36 @@
     }
     #board {
       width: 400px;
+      margin-bottom: 1em;
+    }
+    #log {
+      width: 400px;
+      min-height: 100px;
+      border: 1px solid #aaa;
+      padding: 0.5em;
+      background: #f7f7f7;
+      white-space: pre-wrap;
+      font-family: monospace;
     }
   </style>
 </head>
 <body>
-  <h1>Chessboard Test</h1>
+  <h1>Chessboard + WASM Load Test</h1>
   <div id="board"></div>
+  <div id="log"></div>
+
+  <script>
+    var Module = {
+      onRuntimeInitialized: function () {
+        log("WASM engine loaded successfully.");
+      }
+    };
+
+    function log(msg) {
+      console.log(msg);
+      document.getElementById("log").textContent += msg + "\n";
+    }
+  </script>
 
   <script type="module">
     import { Chessboard, FEN, COLOR, INPUT_EVENT_TYPE } from "./src/Chessboard.js";
@@ -39,7 +63,9 @@
       return true;
     }, COLOR.white);
 
-    console.log("Chessboard initialized", board);
+    log("Board initialized. Waiting for WASM...");
   </script>
+
+  <script src="./engine.js"></script>
 </body>
 </html>
