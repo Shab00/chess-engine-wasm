@@ -125,13 +125,7 @@ The current demo includes:
 
 ## Screenshot
 
-Add a screenshot of the current demo here once captured.
-
-Example:
-
-```markdown
 ![Local chess engine demo](./docs/Chess_Engine_WASM_Demo_Screenshot.png)
-```
 
 ---
 
