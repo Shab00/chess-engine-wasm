@@ -1,105 +1,167 @@
-# ♟️ Chess Engine WASM Demo
+# Chess Engine WASM Demo
 
-Welcome to the open WebAssembly chess engine demo! This project compiles a custom chess engine written in C into WebAssembly, letting users play right in their browser—no install, no server required.
+A browser-based chess engine demo that connects a custom C chess engine to a web UI using WebAssembly.
 
-**Live Demo:**  
-[▶️ Play in your browser on GitHub Pages!](https://Shab00.github.io)  
-
----
-
-## 🚀 Features
-
-- ⚡ **Native-speed C engine** running in your browser with WebAssembly (WASM)
-- ♟️ **Interactive chessboard UI** (powered by [cm-chessboard](https://github.com/shaack/cm-chessboard))
-- 🍃 **Clean, modern minimal UI**
-- 🏁 **No backend/server required**—just static files via GitHub Pages
-- 🎯 **Open-source & portable**—run it, fork it, modify it
-- (Planned) **Adaptive search**, PGN/FEN import/export, and more
+This project is focused on getting a local end-to-end chess engine demo working in the browser: board rendering, WASM loading, JavaScript/WASM integration, and engine-driven board updates.
 
 ---
 
-## 🖥️ How it Works
+## Overview
 
-- The core engine is written in C ([see `src/`](src/)) and compiled to WebAssembly using [Emscripten](https://emscripten.org/).
-- The web UI is standard HTML + JS, using a drag-and-drop chessboard and engine-to-JS glue code.
-- Everything runs **100% in your browser** for maximum portability and privacy.
+The core chess engine is written in C and compiled to WebAssembly using Emscripten. The browser UI is built with HTML, JavaScript, and [`cm-chessboard`](https://github.com/shaack/cm-chessboard), allowing the engine to run locally in the browser without a backend server.
+
+The current demo already supports:
+
+- rendering the chessboard in the browser
+- loading the WebAssembly engine successfully
+- calling engine functions from JavaScript
+- syncing the board from engine FEN
+- making player moves from the UI
+- requesting the engine’s best move
+- resetting or starting a new game locally
 
 ---
 
-## 📦 Directory Structure
+## Current Status
 
-```
+This project is currently at the **local integration milestone** stage.
+
+### What works now
+
+- local board rendering with `cm-chessboard`
+- white-side move input from the browser UI
+- WebAssembly engine startup with no runtime load errors
+- JavaScript ↔ WASM engine communication
+- FEN display and board refresh from engine state
+- local controls for:
+  - **New Game**
+  - **Play Best Move**
+  - **Reset to Start**
+  - **Clear Log**
+
+### Current limitations
+
+- legal move validation still needs tightening in the engine
+- the current demo is focused on local integration rather than a polished final game experience
+- GitHub Pages deployment and a more direct “user plays White against engine” flow are planned next
+
+---
+
+## How It Works
+
+- The chess engine is written in C.
+- The engine is compiled to WebAssembly with Emscripten.
+- The browser loads `engine.js` and `engine.wasm`.
+- The UI sends moves from JavaScript to the engine.
+- The engine returns updated board state as FEN.
+- The board redraws from that FEN in the browser.
+
+Everything runs locally in the browser, with no backend required for the current demo.
+
+---
+
+## Project Structure
+
+```text
 chess-engine-wasm/
-  src/           # C source code of the chess engine
-  docs/          # GitHub Pages files (index.html, engine.js, engine.wasm, assets...)
+  src/           # C source code for the chess engine
+  docs/          # browser demo files (index.html, engine.js, engine.wasm, assets...)
   README.md
 ```
 
 ---
 
-## 🛠️ Local Setup & Build Instructions
+## Running Locally
 
-**1. Clone the repo**
-```sh
-git clone https://github.com/Shab00/chess-engine-wasm.git
-cd chess-engine-wasm
-```
+From the `docs/` directory, start a simple local server:
 
-**2. Install Emscripten ([official guide](https://emscripten.org/docs/getting_started/downloads.html))**
-
-**3. Build the engine as WASM:**
-```sh
-cd src
-emcc engine.c -o ../docs/engine.js -s WASM=1 -s "EXPORTED_FUNCTIONS=['_engine_set_fen','_engine_get_bestmove', ...]" -s "EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
-```
-- Adjust filenames/EXPORTED_FUNCTIONS as needed for your API.
-
-**4. Serve locally (for quick testing):**
-```sh
-cd docs
+```bash
 python3 -m http.server
 ```
-Visit [http://localhost:8000/index.html](http://localhost:8000/index.html)
+
+Then open:
+
+```text
+http://localhost:8000/
+```
+
+If you are serving from the project root instead, open the correct `/docs` path for your local setup.
 
 ---
 
-## 🌍 Deploying with GitHub Pages
+## Building the WASM Engine
 
-- Push new commits to the main branch.
-- Ensure the `docs/` folder has your latest `index.html`, `engine.js`, and `engine.wasm`.
-- The site will be public soon at:  
-  `https://<your-username>.github.io/chess-engine-wasm/`
+The engine is compiled from the C source using Emscripten.
 
----
+Example build approach:
 
-## ✨ Future Plans
+```bash
+cd src
+emcc engine.c -o ../docs/engine.js -s WASM=1
+```
 
-- Smarter move generation, adaptive search depth
-- UCI import/export, PGN logs and analysis
-- Stronger evaluation & training self-play
-- Theme switching, more mobile-friendly UI
+Depending on your engine wrapper, you may also need to export the functions used by the browser UI, such as:
 
----
+- `wasm_engine_new_game`
+- `wasm_engine_get_fen`
+- `wasm_engine_make_move`
+- `wasm_engine_get_bestmove`
+- `wasm_engine_set_fen`
 
-## 🤝 Contributing
-
-Contributions, feature requests, and bug reports are welcome—open an issue or PR!
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License.  
-See the [LICENSE](LICENSE) file for details.
+Adjust the exact build command and exported functions to match your implementation.
 
 ---
 
-## 🙌 Acknowledgments
+## Controls
 
-- [cm-chessboard](https://github.com/shaack/cm-chessboard) for the sleek JS chessboard
-- [Emscripten](https://emscripten.org/) for awesome WASM compiler tech
-- [Stockfish authors](https://stockfishchess.org/) and the open chess dev community for inspiration
+The current demo includes:
+
+- **New Game** — starts a fresh game in the engine and refreshes the board
+- **Play Best Move** — asks the engine for the current best move and plays it
+- **Reset to Start** — resets the engine and board to the starting position
+- **Clear Log** — clears the log panel
 
 ---
 
-*Made by [Shab00](https://github.com/Shab00).
+## Screenshot
+
+Add a screenshot of the current demo here once captured.
+
+Example:
+
+```markdown
+![Local chess engine demo](./docs/Chess_Engine_WASM_Demo_Screenshot.png)
+```
+
+---
+
+## Next Steps
+
+Planned next steps include:
+
+- deploy the browser demo to GitHub Pages
+- make the user play White while the engine responds automatically
+- improve move legality handling
+- continue polishing the UI and developer documentation
+
+---
+
+## Acknowledgements
+
+🌸 Credit and thanks to the tools and communities that helped make this possible:
+
+- [`cm-chessboard`](https://github.com/shaack/cm-chessboard) for the browser chessboard UI
+- [Emscripten](https://emscripten.org/) for the C → WebAssembly toolchain
+- the wider open-source chess programming community for ideas, references, and inspiration
+
+---
+
+## Contributing
+
+Contributions, suggestions, and bug reports are welcome. Feel free to open an issue or submit a pull request.
+
+---
+
+## License
+
+Add your license details here once confirmed.
