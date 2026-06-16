@@ -42,6 +42,7 @@ void wasm_engine_new_game(void) {
     pos_error_t r = position_from_fen(&g_position,
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         err, sizeof(err));
+    (void)r;
     last_a1 = -999;
 }
 
@@ -63,16 +64,34 @@ static int promo_from_char(char c) {
 
 int wasm_engine_make_move(const char *move_str) {
     if (!move_str || strlen(move_str) < 4) return 1;
+
     int from = position_square_from_coords(move_str[0], move_str[1]);
     int to   = position_square_from_coords(move_str[2], move_str[3]);
     if (from == POS_NO_SQUARE || to == POS_NO_SQUARE) return 1;
+
     int promo = PIECE_EMPTY;
-    if (strlen(move_str) >= 5) promo = promo_from_char(move_str[4]);
+    if (strlen(move_str) >= 5) {
+        promo = promo_from_char(move_str[4]);
+        if (promo == PIECE_EMPTY) return 1;
+    }
 
-    MoveUndo mv_undo;
-    make_move(&g_position, from, to, promo, &mv_undo);
+    int moves_from[256];
+    int moves_to[256];
+    int promotions[256];
 
-    return 0;
+    int count = generate_legal_moves(&g_position, moves_from, moves_to, promotions, 256);
+
+    for (int i = 0; i < count; ++i) {
+        if (moves_from[i] == from &&
+            moves_to[i] == to &&
+            promotions[i] == promo) {
+            MoveUndo mv_undo;
+            make_move(&g_position, from, to, promo, &mv_undo);
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
 static void format_move(int from, int to, int promo, char *buf, int bufsz) {
